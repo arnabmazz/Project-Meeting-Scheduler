@@ -9,6 +9,25 @@ int nTeams = 0;
 int nProjects = 0;
 int nEmployees = 0;
 
+struct Team {
+	char name[50];
+	char date[11];
+	char time[6];
+	char str_dur_hours[3];
+
+	int year;
+	int month;
+	int day;
+
+	int hours;
+	int minutes;
+
+	int dur_hours;
+};
+
+struct Team stTeams[255];
+int nStTeams = 0;
+
 void cls() {
 #if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 	system("clear");
@@ -26,15 +45,79 @@ void flush() {
 }
 
 void initialize() {
-	printf("Initializing...");
 	for (size_t i = 0; i < 100; i++)
 		for (size_t j = 0; j < 100; j++) {
 			Teams[i][j] = '\0';
 			Projects[i][j] = '\0';
 			Employees[i][j] = '\0';
 		}
+}
 
-	cls();
+void inputMeetingRequest() {
+	printf("Team_Name yyyy-mm-dd hh:mm hours");
+	printf("\n\nEnter data in above format | ");
+
+	char str[255];
+	char delim[] = " -:";
+
+	flush();
+	fgets(str, 255, stdin);
+
+	// going to parse input and add data into struct Team
+
+	char date[11];
+	char time[6];
+	char dateDelim[] = "-";
+	char timeDelim[] = ":";
+
+	// add name
+	char *ptr = strtok(str, delim);
+	strcpy(stTeams[nStTeams].name, ptr);
+
+	// add year
+	ptr = strtok(NULL, delim);
+	stTeams[nStTeams].year = atoi(ptr);
+	strcpy(date, ptr);
+
+	// add month
+	ptr = strtok(NULL, delim);
+	stTeams[nStTeams].month = atoi(ptr);
+	strcat(date, dateDelim);
+	strcat(date, ptr);
+
+	// add day
+	ptr = strtok(NULL, delim);
+	stTeams[nStTeams].day = atoi(ptr);
+	strcat(date, dateDelim);
+	strcat(date, ptr);
+
+	// add hours
+	ptr = strtok(NULL, delim);
+	stTeams[nStTeams].hours = atoi(ptr);
+	strcpy(time, ptr);
+
+	// add minutes
+	ptr = strtok(NULL, delim);
+	stTeams[nStTeams].minutes = atoi(ptr);
+	strcat(time, timeDelim);
+	strcat(time, ptr);
+
+	// add meeting duration hours
+	ptr = strtok(NULL, delim);
+	strcpy(stTeams[nStTeams].str_dur_hours, ptr);
+	stTeams[nStTeams].dur_hours = atoi(ptr);
+
+	// add strings time and date
+	strcpy(stTeams[nStTeams].time, time);
+	strcpy(stTeams[nStTeams].date, date);
+
+	// increment index
+	nStTeams++;
+
+	printf("\nMeeting request received.\n");
+
+	getchar();
+	// Team_A 2022-04-24 09:40 2
 }
 
 void createProjectTeam() {
@@ -83,7 +166,7 @@ void meetingRequestMenu() {
 
 	switch (choice) {
 		case 1:
-			//
+			inputMeetingRequest();
 			break;
 
 		case 2:
@@ -125,6 +208,7 @@ void printMeetingSchedule() {
 }
 
 void mainMenu() {
+	cls();
 	printf(" ~~ WELCOME TO PolyStar ~~");
 	printf("\n\n1. Create Project Team");
 	printf("\n2. Project Meeting Request");

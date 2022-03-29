@@ -4,7 +4,7 @@
 		{
 			"label": "compile & run",
 			"type": "shell",
-			"command": "run.bat",
+			"command": "./run.sh",
 			"group": {
 				"kind": "build",
 				"isDefault": true
