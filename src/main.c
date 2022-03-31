@@ -52,6 +52,13 @@ void flush() {
 	while (c != EOF && c != '\n');
 }
 
+void validManager(char *manager) {
+	int matches = 0;
+	for (size_t i = 0; i < nTeams; i++)
+		if(strcasecmp(manager, Teams[i].manager) == 0) matches++;
+	return matches == 1;	
+}
+
 void parseMeetingRequest(char *buffer) {
 	// parse input and add data into struct Meeting
 
