@@ -45,13 +45,15 @@ void cls() {
 }
 
 void flush() {
+	// a function to make sure there isn't any unread data
+	// in stdin. (unread \n causes fgets to skip)
 	int c;
 	do c = getchar();
 	while (c != EOF && c != '\n');
 }
 
 void parseMeetingRequest(char *buffer) {
-	// going to parse input and add data into struct Meeting
+	// parse input and add data into struct Meeting
 
 	char date[11];
 	char time[6];
@@ -113,8 +115,10 @@ void batchMeetingRequest() {
 	flush();
 	fgets(filename, 20, stdin);
 
+	// remove trailing newline char (replace it with null terminator)
 	filename[strcspn(filename, "\n")] = 0;
 
+	// return if file doesnt exist
 	if(access(filename, F_OK) != 0) {
 		printf("\nCannot find file, make sure its in current dir.");
 		getchar();
