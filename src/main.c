@@ -115,6 +115,11 @@ void batchMeetingRequest() {
 	flush();
 	fgets(filename, 20, stdin);
 
+	if(filename[0] == '0') {
+		cls();
+		return;
+	}
+
 	// remove trailing newline char (replace it with null terminator)
 	filename[strcspn(filename, "\n")] = 0;
 
@@ -157,6 +162,11 @@ void inputMeetingRequest() {
 	flush();
 	fgets(str, 255, stdin);
 
+	if(str[0] == '0') {
+		cls();
+		return;
+	}
+
 	parseMeetingRequest(str);
 
 	printf("\nMeeting request received.\n");
@@ -175,6 +185,11 @@ void createProjectTeam() {
 
 	flush();
 	fgets(str, 255, stdin);
+
+	if(str[0] == '0') {
+		cls();
+		return;
+	}
 
 	// add team name
 	char *ptr = strtok(str, delim);
