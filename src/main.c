@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 
 struct Team {
@@ -31,6 +32,8 @@ int nMeetings = 0;
 struct Team Teams[255];
 int nTeams = 0;
 
+//
+
 void cls() {
 #if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 	system("clear");
@@ -47,25 +50,18 @@ void flush() {
 	while (c != EOF && c != '\n');
 }
 
-void inputMeetingRequest() {
-	printf("Team_Name yyyy-mm-dd hh:mm hours");
-	printf("\n\nEnter data in above format | ");
-
-	char str[255];
-	char delim[] = " -:";
-
-	flush();
-	fgets(str, 255, stdin);
-
+void parseMeetingRequest(char *buffer) {
 	// going to parse input and add data into struct Meeting
 
 	char date[11];
 	char time[6];
+
+	char delim[] = " -:";
 	char dateDelim[] = "-";
 	char timeDelim[] = ":";
 
 	// add team name
-	char *ptr = strtok(str, delim);
+	char *ptr = strtok(buffer, delim);
 	strcpy(Meetings[nMeetings].team_name, ptr);
 
 	// add year
@@ -107,6 +103,57 @@ void inputMeetingRequest() {
 
 	// increment index
 	nMeetings++;
+}
+
+void batchMeetingRequest() {
+	printf("Enter file name | ");
+
+	char filename[20];
+
+	flush();
+	fgets(filename, 20, stdin);
+
+	filename[strcspn(filename, "\n")] = 0;
+
+	if(access(filename, F_OK) != 0) {
+		printf("\nCannot find file, make sure its in current dir.");
+		getchar();
+		cls();
+		return;
+	}
+
+	FILE *file;
+	int bufferLen = 255;
+	char buffer[bufferLen];
+
+	file = fopen(filename, "r");
+
+	int i = 0;
+
+	while(fgets(buffer, bufferLen, file)) {
+		buffer[strcspn(buffer, "\n")] = 0;
+		parseMeetingRequest(buffer);
+		i++;
+	}
+
+	fclose(file);
+
+	printf("\n%d meeting requests received.\n", i);
+
+	getchar();
+	cls();
+}
+
+void inputMeetingRequest() {
+	printf("Team_Name yyyy-mm-dd hh:mm hours");
+	printf("\n\nEnter data in above format | ");
+
+	char str[255];
+
+	flush();
+	fgets(str, 255, stdin);
+
+	parseMeetingRequest(str);
 
 	printf("\nMeeting request received.\n");
 
@@ -171,7 +218,7 @@ void meetingRequestMenu() {
 			break;
 
 		case 2:
-			//
+			batchMeetingRequest();
 			break;
 
 		case 3:
