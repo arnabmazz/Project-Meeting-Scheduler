@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdbool.h>
 
 struct Team {
 	char team_name[20];
@@ -52,11 +53,42 @@ void flush() {
 	while (c != EOF && c != '\n');
 }
 
-void validManager(char *manager) {
+void pause() {
+	getchar();
+	cls();
+}
+
+bool validProject(char *team) {
+	// checks if given person is already managing a team or not
 	int matches = 0;
-	for (size_t i = 0; i < nTeams; i++)
+	for (size_t i = 0; i <= nTeams; i++)
+		if(strcasecmp(team, Teams[i].team_name) == 0) matches++;
+	return matches <= 1;
+}
+
+bool validProject(char *project) {
+	// checks if given person is already managing a team or not
+	int matches = 0;
+	for (size_t i = 0; i <= nTeams; i++)
+		if(strcasecmp(project, Teams[i].project_name) == 0) matches++;
+	return matches <= 1;
+}
+
+bool validManager(char *manager) {
+	// checks if given person is already managing a team or not
+	int matches = 0;
+	for (size_t i = 0; i <= nTeams; i++)
 		if(strcasecmp(manager, Teams[i].manager) == 0) matches++;
-	return matches == 1;	
+	return matches <= 1;
+}
+
+bool validMember(char *member) {
+	// checks if given person is in less 3 teams or not
+	int matches = 0;
+	for (size_t i = 0; i <= nTeams; i++)
+		for (size_t j = 0; j < 3; j++)		
+			if(strcasecmp(member, Teams[i].members[j]) == 0) matches++;
+	return matches <= 3;
 }
 
 void parseMeetingRequest(char *buffer) {
@@ -133,8 +165,7 @@ void batchMeetingRequest() {
 	// return if file doesnt exist
 	if(access(filename, F_OK) != 0) {
 		printf("\nCannot find file, make sure its in current dir.");
-		getchar();
-		cls();
+		pause();
 		return;
 	}
 
@@ -155,9 +186,7 @@ void batchMeetingRequest() {
 	fclose(file);
 
 	printf("\n%d meeting requests received.\n", i);
-
-	getchar();
-	cls();
+	pause();
 }
 
 void inputMeetingRequest() {
@@ -178,8 +207,7 @@ void inputMeetingRequest() {
 
 	printf("\nMeeting request received.\n");
 
-	getchar();
-	cls();
+	pause();
 	// Team_A 2022-04-24 09:40 2
 }
 
@@ -198,29 +226,52 @@ void createProjectTeam() {
 		return;
 	}
 
+	// clear the current struct just in case
+	bzero(&Teams[nTeams], sizeof(Teams[nTeams]));
+
 	// add team name
 	char *ptr = strtok(str, delim);
 	strcpy(Teams[nTeams].team_name, ptr);
+	if(!validTeam(ptr)) {
+		printf("\n%s already exists!\n", ptr);
+		pause();
+		return;
+	}
 
 	// add project name
 	ptr = strtok(NULL, delim);
 	strcpy(Teams[nTeams].project_name, ptr);
+	if(!validProject(ptr)) {
+		printf("\n%s already exists!\n", ptr);
+		pause();
+		return;
+	}
 
 	// add manager
 	ptr = strtok(NULL, delim);
 	strcpy(Teams[nTeams].manager, ptr);
 
+	if(!validManager(ptr)) {
+		printf("\n%s is already manager of some project!\n", ptr);
+		pause();
+		return;
+	}
+
 	// add members
 	for (size_t i = 0; i < 3; i++) {
 		ptr = strtok(NULL, delim);
 		strcpy(Teams[nTeams].members[i], ptr);
+		if(!validMember(ptr)) {
+			printf("\n%s is already in 3 projects!\n", ptr);
+			pause();
+			return;
+		}
 	}
 
-	printf("\n%s %s is created.\n", Teams[nTeams].team_name, Teams[nTeams].project_name);
-
 	nTeams++;
-	getchar();
-	cls();
+
+	printf("\n%s %s is created.\n", Teams[nTeams].team_name, Teams[nTeams].project_name);
+	pause();
 	// Team_A Project_A Alan Cathy Fanny Helen
 }
 
