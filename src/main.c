@@ -59,6 +59,45 @@ void Pause() {
 	cls();
 }
 
+int getTeamIndex(char *name) {
+	for (size_t i = 0; i < nTeams; i++)
+		if(strcasecmp(name, Teams[i].team_name) == 0)
+			return i;
+	return -1;
+}
+
+bool checkTimeOverlap(int m, int n) {
+	struct Meeting A = Meetings[m];
+	struct Meeting B = Meetings[n];
+
+	if(A.year != B.year) return false;
+	if(A.month != B.month) return false;
+	if(A.day != B.day) return false;
+	if(A.hours == B.hours) return true;
+
+	if(A.hours > B.hours && A.hours < B.hours + B.dur_hours) return true;
+	if(B.hours > A.hours && B.hours < A.hours + A.dur_hours) return true;
+
+	return false;
+}
+
+bool checkOverlapMeetings(int m, int n) {
+	struct Team A = Teams[getTeamIndex(Meetings[m].team_name)];
+	struct Team B = Teams[getTeamIndex(Meetings[n].team_name)];
+
+	bool commonMembers = false;
+
+	for (size_t i = 0; i < 3; i++)
+		for (size_t j = 0; j < 3; j++)
+			if(strcasecmp(A.members[i], B.members[j]) == 0)
+				commonMembers = true;
+
+	// if there are no common members then there cant be an overlap
+	if(!commonMembers) return false;
+
+	return checkTimeOverlap(m, n);
+}
+
 void scheduleFCFS() {
 	int fd_c2p[2];
 
@@ -72,39 +111,40 @@ void scheduleFCFS() {
 	if(pid == 0) {
 		close(p_read);
 
-		char approved[50][3];	// storing approved meeting indexes in here
-		char rejected[50][3];	// storing approved meeting indexes in here
+		int approved[50];	// storing approved meeting indexes in here
+		int rejected[50];	// storing approved meeting indexes in here
 		int a = 0;	// approved last index
 		int r = 0;	// approved last index
 
 		for (size_t i = 0; i < nMeetings; i++)
-		{
-			struct Meeting meeting = Meetings[i];
-
 			for (size_t j = 0; j < a; j++)
 			{
-				struct Meeting q_meeting = Meetings[atoi(approved[j])];
-				
+				bool overlap = checkOverlapMeetings(i, approved[j]);
+				if(overlap)
+					rejected[r++] = i;
+				else
+					approved[a++] = i;
 			}
-			
-		}
 
+		const int bufferSize = 100;
+		char buffer[100] = {0};
 
-		char buffer[] = "somePassword123";
+		for (size_t i = 0; i < a; i++)
+			snprintf(buffer, bufferSize, "%s|%d", buffer, approved[i]);
 
-		write(c_write, buffer, strlen(buffer));
+		write(c_write, buffer, bufferSize);
 
 		exit(0);
 	}
 
 	close(c_write);
 
-	int bufferSize = 4096;
-	char buffer[bufferSize];
+	const int bufferSize = 4096;
+	char buffer[4096] = {0};
 
 	read(p_read, buffer, bufferSize);
 
-	printf("%s", buffer);
+	printf("\n\n%s\n\n", buffer);
 
 	waitpid(pid, NULL, 0);
 
@@ -322,9 +362,9 @@ void createProjectTeam() {
 		}
 	}
 
+	printf("\n%s %s is created.\n", Teams[nTeams].team_name, Teams[nTeams].project_name);
 	nTeams++;
 
-	printf("\n%s %s is created.\n", Teams[nTeams].team_name, Teams[nTeams].project_name);
 	Pause();
 	// Team_A Project_A Alan Cathy Fanny Helen
 }
