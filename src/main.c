@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
+#include <sys/wait.h>
 
 struct Team {
 	char team_name[20];
@@ -53,12 +54,65 @@ void flush() {
 	while (c != EOF && c != '\n');
 }
 
-void pause() {
+void Pause() {
 	getchar();
 	cls();
 }
 
-bool validProject(char *team) {
+void scheduleFCFS() {
+	int fd_c2p[2];
+
+	pipe(fd_c2p);
+
+	int c_write = fd_c2p[1];
+	int p_read = fd_c2p[0];
+
+	int pid = fork();
+
+	if(pid == 0) {
+		close(p_read);
+
+		char approved[50][3];	// storing approved meeting indexes in here
+		char rejected[50][3];	// storing approved meeting indexes in here
+		int a = 0;	// approved last index
+		int r = 0;	// approved last index
+
+		for (size_t i = 0; i < nMeetings; i++)
+		{
+			struct Meeting meeting = Meetings[i];
+
+			for (size_t j = 0; j < a; j++)
+			{
+				struct Meeting q_meeting = Meetings[atoi(approved[j])];
+				
+			}
+			
+		}
+
+
+		char buffer[] = "somePassword123";
+
+		write(c_write, buffer, strlen(buffer));
+
+		exit(0);
+	}
+
+	close(c_write);
+
+	int bufferSize = 4096;
+	char buffer[bufferSize];
+
+	read(p_read, buffer, bufferSize);
+
+	printf("%s", buffer);
+
+	waitpid(pid, NULL, 0);
+
+	flush();
+	Pause();
+}
+
+bool validTeam(char *team) {
 	// checks if given person is already managing a team or not
 	int matches = 0;
 	for (size_t i = 0; i <= nTeams; i++)
@@ -165,7 +219,7 @@ void batchMeetingRequest() {
 	// return if file doesnt exist
 	if(access(filename, F_OK) != 0) {
 		printf("\nCannot find file, make sure its in current dir.");
-		pause();
+		Pause();
 		return;
 	}
 
@@ -186,7 +240,7 @@ void batchMeetingRequest() {
 	fclose(file);
 
 	printf("\n%d meeting requests received.\n", i);
-	pause();
+	Pause();
 }
 
 void inputMeetingRequest() {
@@ -207,7 +261,7 @@ void inputMeetingRequest() {
 
 	printf("\nMeeting request received.\n");
 
-	pause();
+	Pause();
 	// Team_A 2022-04-24 09:40 2
 }
 
@@ -234,7 +288,7 @@ void createProjectTeam() {
 	strcpy(Teams[nTeams].team_name, ptr);
 	if(!validTeam(ptr)) {
 		printf("\n%s already exists!\n", ptr);
-		pause();
+		Pause();
 		return;
 	}
 
@@ -243,7 +297,7 @@ void createProjectTeam() {
 	strcpy(Teams[nTeams].project_name, ptr);
 	if(!validProject(ptr)) {
 		printf("\n%s already exists!\n", ptr);
-		pause();
+		Pause();
 		return;
 	}
 
@@ -253,7 +307,7 @@ void createProjectTeam() {
 
 	if(!validManager(ptr)) {
 		printf("\n%s is already manager of some project!\n", ptr);
-		pause();
+		Pause();
 		return;
 	}
 
@@ -263,7 +317,7 @@ void createProjectTeam() {
 		strcpy(Teams[nTeams].members[i], ptr);
 		if(!validMember(ptr)) {
 			printf("\n%s is already in 3 projects!\n", ptr);
-			pause();
+			Pause();
 			return;
 		}
 	}
@@ -271,7 +325,7 @@ void createProjectTeam() {
 	nTeams++;
 
 	printf("\n%s %s is created.\n", Teams[nTeams].team_name, Teams[nTeams].project_name);
-	pause();
+	Pause();
 	// Team_A Project_A Alan Cathy Fanny Helen
 }
 
@@ -319,7 +373,7 @@ void printMeetingSchedule() {
 
 	switch (choice) {
 		case 1:
-			//
+			scheduleFCFS();
 			break;
 
 		case 2:
