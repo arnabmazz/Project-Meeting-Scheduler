@@ -116,23 +116,29 @@ void scheduleFCFS() {
 		int a = 0;	// approved last index
 		int r = 0;	// approved last index
 
-		for (size_t i = 0; i < nMeetings; i++)
-			for (size_t j = 0; j < a; j++)
+		for (int i = 0; i < nMeetings; i++) {
+			bool overlap = false;
+			for (int j = 0; j < a; j++)
 			{
-				bool overlap = checkOverlapMeetings(i, approved[j]);
-				if(overlap)
-					rejected[r++] = i;
-				else
-					approved[a++] = i;
+				overlap = checkOverlapMeetings(i, approved[j]);
+				if(overlap) break;
 			}
 
-		const int bufferSize = 100;
+			if(overlap)
+				rejected[r++] = i;
+			else
+				approved[a++] = i;
+		}
+
 		char buffer[100] = {0};
+		char buffer_[200] = {0};
 
-		for (size_t i = 0; i < a; i++)
-			snprintf(buffer, bufferSize, "%s|%d", buffer, approved[i]);
+		for (int i = 0; i < a; i++) {
+			snprintf(buffer_, 200, "%d|", approved[i]);
+			strcat(buffer, buffer_);
+		}
 
-		write(c_write, buffer, bufferSize);
+		write(c_write, buffer, 100);
 
 		exit(0);
 	}
@@ -367,6 +373,7 @@ void createProjectTeam() {
 
 	Pause();
 	// Team_A Project_A Alan Cathy Fanny Helen
+	// Team_B Project_B Cathy Allan Fanny Helen
 }
 
 void meetingRequestMenu() {
