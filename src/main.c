@@ -201,6 +201,9 @@ void parseMeetingRequest(char *buffer) {
 	char dateDelim[] = "-";
 	char timeDelim[] = ":";
 
+	// clear the current struct just in case
+	bzero(&Meetings[nMeetings], sizeof(Meetings[nMeetings]));
+
 	// add team name
 	char *ptr = strtok(buffer, delim);
 	strcpy(Meetings[nMeetings].team_name, ptr);
@@ -225,6 +228,10 @@ void parseMeetingRequest(char *buffer) {
 	// add hours
 	ptr = strtok(NULL, delim);
 	Meetings[nMeetings].hours = atoi(ptr);
+	if(Meetings[nMeetings].hours > 9) {
+		printf("\n\nMeeting hours cannot exceed 9 hours, request ignored.\n\n");
+		return;
+	}
 	strcpy(time, ptr);
 
 	// add minutes
