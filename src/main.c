@@ -210,7 +210,7 @@ void outputModule(char *approved, char *algo) {
 
 			for (int j = 0; j < nApproved; j++)
 			{
-				struct Meeting meeting = Meetings[approved[nApproved]];
+				struct Meeting meeting = Meetings[approved[j]];
 				struct Team team = Teams[getTeamIndex(meeting.team_name)];
 
 				for (int k = 0; k < 3; k++)
@@ -530,6 +530,7 @@ void createProjectTeam() {
 	Pause();
 	// Team_A Project_A Alan Cathy Fanny Helen
 	// Team_B Project_B Cathy Allan Fanny Helen
+	// 2022-04-20 2022-04-30
 }
 
 void meetingRequestMenu() {
