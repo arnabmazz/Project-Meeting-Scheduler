@@ -909,8 +909,10 @@ void printSummary() {
 
 	fclose(file);
 
-	printf("Summary saved to %s", filename);
+	printf("Summary saved to %s\n", filename);
+	flush();
 	Pause();
+	cls();
 }
 
 void projectTeamMenu() {

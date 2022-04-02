@@ -1,19 +1,10 @@
 Performance:
 
-Number of requests received: 7
-Number of requests accepted: 8 (114.29%)
-Number of requests rejected: 6 (85.71%)
+Number of requests received: 0
+Number of requests accepted: 0 (-nan%)
+Number of requests rejected: 0 (-nan%)
 
 Utilization of Time Slot:
 
-Team_A					100.00%
-Team_B					75.00%
-Team_C					50.00%
-Team_D					50.00%
-Team_E					0.00%
 
 Attendace:
-
-Billy					100.00%
-David					100.00%
-Gary					100.00%
