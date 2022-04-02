@@ -45,6 +45,15 @@ struct Range {
 
 struct Range range;
 
+struct Attendance {
+	char person[20];
+	float presents;
+	int times_taken;
+};
+
+struct Attendance attendace[100];
+int nAttendance;
+
 //
 
 void cls() {
@@ -741,6 +750,89 @@ void createProjectTeam() {
 	// 2022-04-20 2022-04-30
 }
 
+void meetingAttendance() {
+	if(nTeams == 0) {
+		printf("Create Teams first!\n");
+		return;
+	}
+
+	printf("Enter name of Team | ");
+
+	char team_name[20];
+	flush();
+	fgets(team_name, 20, stdin);
+
+	team_name[strcspn(team_name, "\n")] = 0;
+
+	int index = getTeamIndex(team_name);
+
+	if(index == -1) {
+		printf("\n\nThis team doesn't exist!\n");
+		Pause();
+		return;
+	}
+
+	struct Team team = Teams[index];
+
+	for (int i = 0; i < 3; i++)
+	{
+		bool found = false;
+		int j;
+		for (j = 0; j < nAttendance; j++)
+			if(strcasecmp(attendace[j].person, team.members[i]) == 0) {
+				found = true;
+				break;
+			}
+
+		int att_index;
+
+		if(found) {
+			att_index = j;
+		}
+		else {
+			att_index = nAttendance++;
+			strcpy(attendace[att_index].person, team.members[i]);
+			attendace[att_index].times_taken = 0;
+			attendace[att_index].presents = 0;
+		}
+
+		printf("\nIs %s present ? (Enter 1 or 0) ", team.members[i]);
+		int present;
+		scanf("%d", &present);
+
+		attendace[att_index].times_taken++;
+
+		if(present == 1)
+			attendace[att_index].presents++;
+	}
+
+	printf("\n\nDone!\n");
+	flush();
+	Pause();	
+}
+
+void attendanceReport() {
+	char filename[] = "Attendace_Report.txt";
+	FILE *file = fopen(filename, "w");
+
+	fprintf(file, "*** Attendace Report ***");
+	fprintf(file, "\n\n=============================");
+
+	for (int i = 0; i < nAttendance; i++)
+	{
+		struct Attendance att = attendace[i];
+		fprintf(file, "\n%s\t\t\t\t\t%.2f%%", att.person, (att.presents/att.times_taken)*(float)100);
+	}
+
+	fprintf(file, "\n=============================");
+
+	fclose(file);
+
+	printf("\n\nAttendance Report saved to %s\n", filename);
+	flush();
+	Pause();	
+}
+
 void projectTeamMenu() {
 	printf("1. Single input");
 	printf("\n2. Batch input");
@@ -789,7 +881,7 @@ void meetingRequestMenu() {
 			break;
 
 		case 3:
-			//
+			meetingAttendance();
 			break;
 	}
 }
@@ -797,13 +889,14 @@ void meetingRequestMenu() {
 void printMeetingSchedule() {
 	printf("1. FCFS");
 	printf("\n2. Priority");
+	printf("\n3. Attendance Report");
 
 	int choice;
 
 	do {
 		printf("\n\nEnter an option | ");
 		scanf("%d", &choice);
-	} while (choice < 0 || choice > 2);
+	} while (choice < 0 || choice > 3);
 
 	cls();
 
@@ -817,7 +910,7 @@ void printMeetingSchedule() {
 			break;
 
 		case 3:
-			//
+			attendanceReport();
 			break;
 	}
 }
