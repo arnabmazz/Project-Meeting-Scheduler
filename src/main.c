@@ -34,6 +34,17 @@ int nMeetings = 0;
 struct Team Teams[255];
 int nTeams = 0;
 
+struct Range {
+	int s_year;
+	int e_year;
+	int s_month;
+	int e_month;
+	int s_day;
+	int e_day;
+};
+
+struct Range range;
+
 //
 
 void cls() {
@@ -57,6 +68,34 @@ void flush() {
 void Pause() {
 	getchar();
 	cls();
+}
+
+bool getRange() {
+	printf("\nyyyy-mm-dd yyyy-mm-dd\nEnter starting and ending date in above format | ");
+	char str[255];
+	char delim[] = " -";
+
+	flush();
+	fgets(str, 255, stdin);
+
+	if(str[0] == '0') {
+		cls();
+		return false;
+	}
+
+	char *ptr = strtok(str, delim);
+	range.s_year = atoi(ptr);
+	ptr = strtok(NULL, delim);
+	range.s_month = atoi(ptr);
+	ptr = strtok(NULL, delim);
+	range.s_day = atoi(ptr);
+	ptr = strtok(NULL, delim);
+	range.e_year = atoi(ptr);
+	ptr = strtok(NULL, delim);
+	range.e_month = atoi(ptr);
+	ptr = strtok(NULL, delim);
+	range.e_day = atoi(ptr);
+	return true;
 }
 
 int getTeamIndex(char *name) {
@@ -98,7 +137,120 @@ bool checkOverlapMeetings(int m, int n) {
 	return checkTimeOverlap(m, n);
 }
 
+void outputModule(char *approved, char *algo) {
+	int fd_1[2];
+	int fd_2[2];
+
+	pipe(fd_1);
+	pipe(fd_2);
+
+	int c_write = fd_2[1];
+	int p_read = fd_2[0];
+	int p_write = fd_1[1];
+	int c_read = fd_1[0];
+
+	int pid = fork();
+
+	if(pid == 0) {
+		close(p_read);
+		close(p_write);
+
+		char buffer[200] = {0};
+		read(c_read, buffer, 200);
+
+
+		char filename[] = "Schedule_FCFS.txt";
+
+		FILE *file = fopen(filename, "w");
+
+		fprintf(file, "*** Project Meeting ***");
+		fprintf(file, "\n\nAlgorithm used: FCFS");
+		fprintf(file, "\nPeriod: %d-%d-%d to %d-%d-%d", range.s_year, range.s_month, range.s_day, range.e_year, range.e_month, range.e_day);
+		fprintf(file, "\n\nDate\t\t\t\tStart\t\tEnd\t\t\tTeam\t\t\t\tProject");
+		fprintf(file, "\n=============================================================");
+		
+		char members[50][20];
+		int nMembers = 0;
+		int approved[50];
+		int nApproved = 0;
+		char delims[] = "|";
+		char *ptr = strtok(buffer, delims);
+
+		do
+		{
+			approved[nApproved++] = atoi(ptr);
+			struct Meeting meeting = Meetings[atoi(ptr)];
+			struct Team team = Teams[getTeamIndex(meeting.team_name)];
+			char end_time[6];
+			snprintf(end_time, 6, "%02d:%02d", meeting.hours + meeting.dur_hours, meeting.minutes);
+			fprintf(file, "\n%s\t%s\t\t%s\t\t%s\t\t\t%s", meeting.date, meeting.time, end_time, team.team_name, team.project_name);
+
+			// add each member to members array if not already there
+			for (int i = 0; i < 3; i++)
+			{
+				bool included = false;
+				for (int j = 0; j < nMembers; j++)
+					if(strcasecmp(team.members[i], members[j]) == 0) {
+						included = true;
+						break;
+					}
+				if(!included)
+					strcpy(members[nMembers++], team.members[i]);
+			}
+
+		} while (ptr = strtok(NULL, delims));
+
+		fprintf(file, "\n=============================================================");
+
+		for (int i = 0; i < nMembers; i++)
+		{
+			fprintf(file, "\nStaff: %s", members[i]);
+			fprintf(file, "\n\nDate\t\t\t\tStart\t\tEnd\t\t\tTeam\t\t\t\tProject");
+			fprintf(file, "\n=============================================================");
+
+			for (int j = 0; j < nApproved; j++)
+			{
+				struct Meeting meeting = Meetings[approved[nApproved]];
+				struct Team team = Teams[getTeamIndex(meeting.team_name)];
+
+				for (int k = 0; k < 3; k++)
+					if(strcasecmp(team.members[k], members[i]) == 0) {
+						char end_time[6];
+						snprintf(end_time, 6, "%02d:%02d", meeting.hours + meeting.dur_hours, meeting.minutes);
+						fprintf(file, "\n%s\t%s\t\t%s\t\t%s\t\t\t%s", meeting.date, meeting.time, end_time, team.team_name, team.project_name);
+						break;
+					}
+			}
+			fprintf(file, "\n=============================================================");
+		}
+		
+		fprintf(file, "\n\n\t\t\t\t\t\t\t\t\t\t- End -");
+		fclose(file);
+
+		char msg[100];
+		snprintf(msg, 100, "Schedule exported to %s", filename);
+		write(c_write, msg, 100);
+
+		exit(0);
+	}
+
+	close(c_read);
+	close(c_write);
+
+	write(p_write, approved, 200);
+
+	char buffer[100] = {0};
+	read(p_read, buffer, 100);
+	waitpid(pid, NULL, 0);
+	printf("\n%s\n", buffer);
+
+	flush();
+	Pause();
+}
+
 void scheduleFCFS() {
+	if(!getRange()) return;
+
 	int fd_c2p[2];
 
 	pipe(fd_c2p);
@@ -145,17 +297,13 @@ void scheduleFCFS() {
 
 	close(c_write);
 
-	const int bufferSize = 4096;
-	char buffer[4096] = {0};
-
-	read(p_read, buffer, bufferSize);
-
-	printf("\n\n%s\n\n", buffer);
+	char buffer[200] = {0};
+	read(p_read, buffer, 200);
 
 	waitpid(pid, NULL, 0);
 
-	flush();
-	Pause();
+	char algo[] = "FCFS";
+	outputModule(buffer, algo);
 }
 
 bool validTeam(char *team) {
@@ -228,10 +376,6 @@ void parseMeetingRequest(char *buffer) {
 	// add hours
 	ptr = strtok(NULL, delim);
 	Meetings[nMeetings].hours = atoi(ptr);
-	if(Meetings[nMeetings].hours > 9) {
-		printf("\n\nMeeting hours cannot exceed 9 hours, request ignored.\n\n");
-		return;
-	}
 	strcpy(time, ptr);
 
 	// add minutes
@@ -244,6 +388,11 @@ void parseMeetingRequest(char *buffer) {
 	ptr = strtok(NULL, delim);
 	strcpy(Meetings[nMeetings].str_dur_hours, ptr);
 	Meetings[nMeetings].dur_hours = atoi(ptr);
+
+	if(Meetings[nMeetings].dur_hours > 9) {
+		printf("\n\nMeeting hours cannot exceed 9 hours, request ignored.\n\n");
+		return;
+	}
 
 	// add strings time and date
 	strcpy(Meetings[nMeetings].time, time);
