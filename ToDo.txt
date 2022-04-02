@@ -1,1 +1,0 @@
-meeting hours > 9 -> Error | Clear the struct
