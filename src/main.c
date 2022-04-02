@@ -10,6 +10,8 @@ struct Team {
 	char project_name[20];
 	char manager[20];
 	char members[3][20];
+	int accepted;
+	int rejected;
 };
 
 struct Meeting {
@@ -53,6 +55,10 @@ struct Attendance {
 
 struct Attendance attendace[100];
 int nAttendance;
+
+int requestsTotal = 0;
+int acceptTotal = 0;
+int rejectTotal = 0;
 
 //
 
@@ -328,10 +334,17 @@ void scheduleFCFS() {
 				if(overlap) break;
 			}
 
-			if(overlap)
+			struct Team team = Teams[getTeamIndex(Meetings[i].team_name)];
+			if(overlap) {
 				rejected[r++] = i;
-			else
+				team.rejected++;
+				rejectTotal++;
+			}
+			else {
 				approved[a++] = i;
+				team.accepted++;
+				acceptTotal++;
+			}
 		}
 
 		char approvedBuffer[100] = {0};
@@ -420,19 +433,28 @@ void schedulePriority() {
 				if(overlap) break;
 			}
 
+			struct Team teamI = Teams[getTeamIndex(Meetings[i].team_name)];
+			struct Team teamJ = Teams[getTeamIndex(Meetings[approved[j]].team_name)];
 			if(overlap) {
 				if(getPriority(i, approved[j])) {
 					int reject = approved[j];
 					approved[j] = i;
 					rejected[r++] = reject;
+					teamI.accepted++;
+					teamJ.rejected++;
 				}
 				else {
 					rejected[r++] = i;
+					teamI.rejected++;
+					rejectTotal++;
 				}
 			}
 
-			else
+			else {
 				approved[a++] = i;
+				teamI.accepted++;
+				acceptTotal++;
+			}
 		}
 
 		char approvedBuffer[100] = {0};
@@ -616,6 +638,9 @@ void parseTeam(char *str) {
 			return;
 		}
 	}
+
+	Teams[nTeams].accepted = 0;
+	Teams[nTeams].rejected = 0;
 
 	nTeams++;
 }
@@ -833,6 +858,35 @@ void attendanceReport() {
 	Pause();	
 }
 
+void printSummary() {
+	char filename[] = "Summary.txt";
+
+	FILE *file = fopen(filename, "w");
+
+	fprintf(file, "Performance:");
+	fprintf(file, "\n\nNumber of requests received: %d", requestsTotal);
+	fprintf(file, "\nNumber of requests accepted: %d (%.2f%%)", acceptTotal, ((float)acceptTotal*100)/requestsTotal);
+	fprintf(file, "\nNumber of requests rejected: %d (%.2f%%)", rejectTotal, ((float)rejectTotal*100)/requestsTotal);
+
+	fprintf(file, "\n\nUtilization of Time Slot:\n");
+
+	for (int i = 0; i < nTeams; i++)
+	{
+		struct Team team = Teams[i];
+		fprintf(file, "\n%s\t\t\t\t\t%.2f%%", team.team_name, ((float)team.accepted * 100)/(team.accepted+team.rejected));
+	}
+
+	fprintf(file, "\n\nAttendace:\n");
+
+	for (int i = 0; i < nAttendance; i++)
+	{
+		struct Attendance att = attendace[i];
+		fprintf(file, "\n%s\t\t\t\t\t%.2f%%", att.person, (att.presents/att.times_taken)*(float)100);
+	}
+
+	fclose(file);
+}
+
 void projectTeamMenu() {
 	printf("1. Single input");
 	printf("\n2. Batch input");
@@ -920,14 +974,15 @@ void mainMenu() {
 	printf("\n\n1. Create Project Team");
 	printf("\n2. Project Meeting Request");
 	printf("\n3. Print Meeting Schedule");
-	printf("\n4. Exit");
+	printf("\n4. Print Summary");
+	printf("\n5. Exit");
 
 	int choice;
 
 	do {
 		printf("\n\nEnter an option | ");
 		scanf("%d", &choice);
-	} while (choice < 0 || choice > 4);
+	} while (choice < 1 || choice > 5);
 
 	cls();
 
@@ -945,6 +1000,10 @@ void mainMenu() {
 			break;
 
 		case 4:
+			printSummary();
+			break;
+
+		case 5:
 			exit(0);
 	}
 }
