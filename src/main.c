@@ -592,6 +592,8 @@ void parseMeetingRequest(char *buffer) {
 
 	// increment index
 	nMeetings++;
+
+	requestsTotal++;
 }
 
 void parseTeam(char *str) {
