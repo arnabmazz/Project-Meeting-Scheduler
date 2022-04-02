@@ -1,0 +1,48 @@
+Team Created | Team_A Project_A Alan Billy Cathy David
+Team Created | Team_B Project_B Eva Fanny Gary Helen
+Team Created | Team_C Project_C Cathy Billy David Gary
+Team Created | Team_D Project_D Billy Alan Helen Eva
+Team Created | Team_E Project_E Helen Fanny Cathy Eva
+Meeting Request Received | Team_A 2022-04-24 09:40 2
+Meeting Request Received | Team_B 2022-04-25 10:40 3
+Meeting Request Received | Team_B 2022-04-24 11:40 2
+Meeting Request Received | Team_C 2022-04-24 12:40 1
+Meeting Request Received | Team_D 2022-04-26 09:40 3
+Meeting Request Received | Team_E 2022-04-25 10:40 3
+Meeting Request Received | Team_D 2022-04-26 11:40 3
+Team Created | Team_A Project_A Alan Billy Cathy David
+Team Created | Team_B Project_B Eva Fanny Gary Helen
+Team Created | Team_C Project_C Cathy Billy David Gary
+Team Created | Team_D Project_D Billy Alan Helen Eva
+Team Created | Team_E Project_E Helen Fanny Cathy Eva
+Meeting Request Received | Team_A 2022-04-24 09:40 2
+Meeting Request Received | Team_B 2022-04-25 10:40 3
+Meeting Request Received | Team_B 2022-04-24 11:40 2
+Meeting Request Received | Team_C 2022-04-24 12:40 1
+Meeting Request Received | Team_D 2022-04-26 09:40 3
+Meeting Request Received | Team_E 2022-04-25 10:40 3
+Meeting Request Received | Team_D 2022-04-26 11:40 3
+Team Created | Team_A Project_A Alan Billy Cathy David
+Team Created | Team_B Project_B Eva Fanny Gary Helen
+Team Created | Team_C Project_C Cathy Billy David Gary
+Team Created | Team_D Project_D Billy Alan Helen Eva
+Team Created | Team_E Project_E Helen Fanny Cathy Eva
+Meeting Request Received | Team_A 2022-04-24 09:40 2
+Meeting Request Received | Team_B 2022-04-25 10:40 3
+Meeting Request Received | Team_B 2022-04-24 11:40 2
+Meeting Request Received | Team_C 2022-04-24 12:40 1
+Meeting Request Received | Team_D 2022-04-26 09:40 3
+Meeting Request Received | Team_E 2022-04-25 10:40 3
+Meeting Request Received | Team_D 2022-04-26 11:40 3
+Team Created | Team_A Project_A Alan Billy Cathy David
+Team Created | Team_B Project_B Eva Fanny Gary Helen
+Team Created | Team_C Project_C Cathy Billy David Gary
+Team Created | Team_D Project_D Billy Alan Helen Eva
+Team Created | Team_E Project_E Helen Fanny Cathy Eva
+Meeting Request Received | Team_A 2022-04-24 09:40 2
+Meeting Request Received | Team_B 2022-04-25 10:40 3
+Meeting Request Received | Team_B 2022-04-24 11:40 2
+Meeting Request Received | Team_C 2022-04-24 12:40 1
+Meeting Request Received | Team_D 2022-04-26 09:40 3
+Meeting Request Received | Team_E 2022-04-25 10:40 3
+Meeting Request Received | Team_D 2022-04-26 11:40 3

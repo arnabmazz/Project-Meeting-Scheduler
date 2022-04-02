@@ -61,6 +61,8 @@ int requestsTotal = 0;
 int acceptTotal = 0;
 int rejectTotal = 0;
 
+char auditFN[] = "Audit.txt";
+
 //
 
 void cls() {
@@ -182,7 +184,7 @@ void outputModule(char *approvedM, char *rejectedM, char *algo) {
 
 		fprintf(file, "*** Project Meeting ***");
 		fprintf(file, "\n\nAlgorithm used: %s", algo);
-		fprintf(file, "\nPeriod: %d-%d-%d to %d-%d-%d", range.s_year, range.s_month, range.s_day, range.e_year, range.e_month, range.e_day);
+		fprintf(file, "\nPeriod: %d-%02d-%02d to %d-%02d-%02d", range.s_year, range.s_month, range.s_day, range.e_year, range.e_month, range.e_day);
 		fprintf(file, "\n\nDate\t\t\t\tStart\t\tEnd\t\t\tTeam\t\t\t\tProject");
 		fprintf(file, "\n=============================================================");
 		
@@ -338,7 +340,6 @@ void scheduleFCFS() {
 				if(overlap) break;
 			}
 
-			struct Team team = Teams[getTeamIndex(Meetings[i].team_name)];
 			if(overlap)
 				rejected[r++] = i;
 			else
@@ -382,15 +383,21 @@ void scheduleFCFS() {
 
 	waitpid(pid, NULL, 0);
 
+	char tmp[200] = {0};
+	strcpy(tmp, approvedBuffer);
+
 	char delims[] = "|";
-	char *ptr = strtok(approvedBuffer, delims);
+	char *ptr = strtok(tmp, delims);
 	do
 	{
 		acceptTotal++;
 		Teams[getTeamIndex(Meetings[atoi(ptr)].team_name)].accepted++;
 	} while (ptr = strtok(NULL, delims));
 
-	ptr = strtok(rejectedBuffer, delims);
+	memset(tmp, 0, 200);
+	strcpy(tmp, rejectedBuffer);
+
+	ptr = strtok(tmp, delims);
 	do
 	{
 		rejectTotal++;
@@ -500,15 +507,21 @@ void schedulePriority() {
 
 	waitpid(pid, NULL, 0);
 
+	char tmp[200] = {0};
+	strcpy(tmp, approvedBuffer);
+
 	char delims[] = "|";
-	char *ptr = strtok(approvedBuffer, delims);
+	char *ptr = strtok(tmp, delims);
 	do
 	{
 		acceptTotal++;
 		Teams[getTeamIndex(Meetings[atoi(ptr)].team_name)].accepted++;
 	} while (ptr = strtok(NULL, delims));
 
-	ptr = strtok(rejectedBuffer, delims);
+	memset(tmp, 0, 200);
+	strcpy(tmp, rejectedBuffer);
+
+	ptr = strtok(tmp, delims);
 	do
 	{
 		rejectTotal++;
@@ -553,6 +566,10 @@ bool validMember(char *member) {
 }
 
 void parseMeetingRequest(char *buffer) {
+	FILE *file = fopen(auditFN, "a");
+	fprintf(file, "Meeting Request Received | %s\n", buffer);
+	fclose(file);
+
 	// parse input and add data into struct Meeting
 
 	char date[11];
@@ -618,6 +635,10 @@ void parseMeetingRequest(char *buffer) {
 }
 
 void parseTeam(char *str) {
+	FILE *file = fopen(auditFN, "a");
+	fprintf(file, "Team Created | %s\n", str);
+	fclose(file);
+	
 	char delim[] = " ";
 	
 	// clear the current struct just in case
