@@ -247,6 +247,19 @@ void outputModule(char *approved, char *algo) {
 	Pause();
 }
 
+bool checkMeetingRange(int i) {
+	struct Meeting meeting = Meetings[i];
+
+	if(meeting.year < range.s_year) return false;
+	if(meeting.year > range.e_year) return false;
+	if(meeting.month < range.s_month) return false;
+	if(meeting.month > range.e_month) return false;
+	if(meeting.day < range.s_day) return false;
+	if(meeting.day > range.e_day) return false;
+
+	return true;
+}
+
 void scheduleFCFS() {
 	if(!getRange()) return;
 
@@ -268,6 +281,8 @@ void scheduleFCFS() {
 		int r = 0;	// approved last index
 
 		for (int i = 0; i < nMeetings; i++) {
+			if(!checkMeetingRange(i)) continue;	// skip out of range meetings
+
 			bool overlap = false;
 			for (int j = 0; j < a; j++)
 			{
