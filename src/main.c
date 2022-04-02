@@ -56,6 +56,7 @@ struct Attendance {
 struct Attendance attendace[100];
 int nAttendance;
 
+bool printed = false;
 int requestsTotal = 0;
 int acceptTotal = 0;
 int rejectTotal = 0;
@@ -283,6 +284,9 @@ void outputModule(char *approvedM, char *rejectedM, char *algo) {
 	waitpid(pid, NULL, 0);
 	printf("\n%s\n", buffer);
 
+	if(printed) requestsTotal += requestsTotal;
+	printed = true;
+
 	Pause();
 }
 
@@ -335,16 +339,10 @@ void scheduleFCFS() {
 			}
 
 			struct Team team = Teams[getTeamIndex(Meetings[i].team_name)];
-			if(overlap) {
+			if(overlap)
 				rejected[r++] = i;
-				team.rejected++;
-				rejectTotal++;
-			}
-			else {
+			else
 				approved[a++] = i;
-				team.accepted++;
-				acceptTotal++;
-			}
 		}
 
 		char approvedBuffer[100] = {0};
@@ -383,6 +381,22 @@ void scheduleFCFS() {
 	read(p_read, rejectedBuffer, 200);
 
 	waitpid(pid, NULL, 0);
+
+	char delims[] = "|";
+	char *ptr = strtok(approvedBuffer, delims);
+	do
+	{
+		acceptTotal++;
+		Teams[getTeamIndex(Meetings[atoi(ptr)].team_name)].accepted++;
+	} while (ptr = strtok(NULL, delims));
+
+	ptr = strtok(rejectedBuffer, delims);
+	do
+	{
+		rejectTotal++;
+		Teams[getTeamIndex(Meetings[atoi(ptr)].team_name)].rejected++;
+	} while (ptr = strtok(NULL, delims));
+	
 
 	char algo[] = "FCFS";
 	outputModule(approvedBuffer, rejectedBuffer, algo);
@@ -433,27 +447,19 @@ void schedulePriority() {
 				if(overlap) break;
 			}
 
-			struct Team teamI = Teams[getTeamIndex(Meetings[i].team_name)];
-			struct Team teamJ = Teams[getTeamIndex(Meetings[approved[j]].team_name)];
 			if(overlap) {
 				if(getPriority(i, approved[j])) {
 					int reject = approved[j];
 					approved[j] = i;
 					rejected[r++] = reject;
-					teamI.accepted++;
-					teamJ.rejected++;
 				}
 				else {
 					rejected[r++] = i;
-					teamI.rejected++;
-					rejectTotal++;
 				}
 			}
 
 			else {
 				approved[a++] = i;
-				teamI.accepted++;
-				acceptTotal++;
 			}
 		}
 
@@ -493,6 +499,21 @@ void schedulePriority() {
 	read(p_read, rejectedBuffer, 200);
 
 	waitpid(pid, NULL, 0);
+
+	char delims[] = "|";
+	char *ptr = strtok(approvedBuffer, delims);
+	do
+	{
+		acceptTotal++;
+		Teams[getTeamIndex(Meetings[atoi(ptr)].team_name)].accepted++;
+	} while (ptr = strtok(NULL, delims));
+
+	ptr = strtok(rejectedBuffer, delims);
+	do
+	{
+		rejectTotal++;
+		Teams[getTeamIndex(Meetings[atoi(ptr)].team_name)].rejected++;
+	} while (ptr = strtok(NULL, delims));
 
 	char algo[] = "Priority";
 	outputModule(approvedBuffer, rejectedBuffer, algo);
@@ -887,6 +908,9 @@ void printSummary() {
 	}
 
 	fclose(file);
+
+	printf("Summary saved to %s", filename);
+	Pause();
 }
 
 void projectTeamMenu() {
