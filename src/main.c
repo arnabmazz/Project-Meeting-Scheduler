@@ -137,7 +137,7 @@ bool checkOverlapMeetings(int m, int n) {
 	return checkTimeOverlap(m, n);
 }
 
-void outputModule(char *approvedM, char *algo) {
+void outputModule(char *approvedM, char *rejectedM, char *algo) {
 	int fd_1[2];
 	int fd_2[2];
 
@@ -173,7 +173,9 @@ void outputModule(char *approvedM, char *algo) {
 		char members[50][20];
 		int nMembers = 0;
 		int approved[50];
+		int rejected[50];
 		int nApproved = 0;
+		int nRejected = 0;
 		char delims[] = "|";
 		char *ptr = strtok(buffer, delims);
 
@@ -224,7 +226,26 @@ void outputModule(char *approvedM, char *algo) {
 			}
 			fprintf(file, "\n=============================================================");
 		}
+
+		fprintf(file, "\n\n*** Meeting Request – REJECTED ***");
+		fprintf(file, "\n\n=============================================================");
+
+		char ping[] = "rejected";
+		write(c_write, ping, 10);
+		read(c_read, buffer, 200);
+
+		int countR = 0;
+		ptr = strtok(buffer, delims);
+
+		do
+		{
+			countR++;
+			rejected[nRejected++] = atoi(ptr);
+			struct Meeting meeting = Meetings[atoi(ptr)];
+			fprintf(file, "\n%02d.\t%s\t%s\t%s\t%d", countR, meeting.team_name, meeting.date, meeting.time, meeting.dur_hours);
+		} while (ptr = strtok(NULL, delims));
 		
+		fprintf(file, "\n=============================================================");
 		fprintf(file, "\n\n\t\t\t\t\t\t\t\t\t\t- End -");
 		fclose(file);
 
@@ -237,10 +258,12 @@ void outputModule(char *approvedM, char *algo) {
 
 	close(c_read);
 	close(c_write);
+	char buffer[100] = {0};
 
 	write(p_write, approvedM, 200);
-
-	char buffer[100] = {0};
+	read(p_read, buffer, 100);
+	write(p_write, rejectedM, 200);
+	memset(buffer, 0, 100);
 	read(p_read, buffer, 100);
 	waitpid(pid, NULL, 0);
 	printf("\n%s\n", buffer);
@@ -265,16 +288,21 @@ void scheduleFCFS() {
 	if(!getRange()) return;
 
 	int fd_c2p[2];
+	int fd_p2c[2];
 
 	pipe(fd_c2p);
+	pipe(fd_p2c);
 
 	int c_write = fd_c2p[1];
+	int p_write = fd_p2c[1];
 	int p_read = fd_c2p[0];
+	int c_read = fd_p2c[0];
 
 	int pid = fork();
 
 	if(pid == 0) {
 		close(p_read);
+		close(p_write);
 
 		int approved[50];	// storing approved meeting indexes in here
 		int rejected[50];	// storing approved meeting indexes in here
@@ -297,28 +325,45 @@ void scheduleFCFS() {
 				approved[a++] = i;
 		}
 
-		char buffer[100] = {0};
-		char buffer_[200] = {0};
+		char approvedBuffer[100] = {0};
+		char rejectedBuffer[100] = {0};
+		char buffer[200] = {0};
 
 		for (int i = 0; i < a; i++) {
-			snprintf(buffer_, 200, "%d|", approved[i]);
-			strcat(buffer, buffer_);
+			snprintf(buffer, 200, "%d|", approved[i]);
+			strcat(approvedBuffer, buffer);
 		}
 
-		write(c_write, buffer, 100);
+		memset(buffer, 0, 200);
+		
+		for (int i = 0; i < r; i++) {
+			snprintf(buffer, 200, "%d|", rejected[i]);
+			strcat(rejectedBuffer, buffer);
+		}
+
+		write(c_write, approvedBuffer, 100);
+		read(c_read, buffer, 10);
+		write(c_write, rejectedBuffer, 100);
 
 		exit(0);
 	}
 
 	close(c_write);
+	close(c_read);
 
-	char buffer[200] = {0};
-	read(p_read, buffer, 200);
+	char approvedBuffer[200] = {0};
+	char rejectedBuffer[200] = {0};
+	read(p_read, approvedBuffer, 200);
+
+	char msg[] = "rejected";
+
+	write(p_write, msg, 10);
+	read(p_read, rejectedBuffer, 200);
 
 	waitpid(pid, NULL, 0);
 
 	char algo[] = "FCFS";
-	outputModule(buffer, algo);
+	outputModule(approvedBuffer, rejectedBuffer, algo);
 }
 
 bool getPriority(int i, int j) {
@@ -334,16 +379,21 @@ void schedulePriority() {
 	if(!getRange()) return;
 
 	int fd_c2p[2];
+	int fd_p2c[2];
 
 	pipe(fd_c2p);
+	pipe(fd_p2c);
 
 	int c_write = fd_c2p[1];
+	int p_write = fd_p2c[1];
 	int p_read = fd_c2p[0];
+	int c_read = fd_p2c[0];
 
 	int pid = fork();
 
 	if(pid == 0) {
 		close(p_read);
+		close(p_write);
 
 		int approved[50];	// storing approved meeting indexes in here
 		int rejected[50];	// storing approved meeting indexes in here
@@ -376,28 +426,45 @@ void schedulePriority() {
 				approved[a++] = i;
 		}
 
-		char buffer[100] = {0};
-		char buffer_[200] = {0};
+		char approvedBuffer[100] = {0};
+		char rejectedBuffer[100] = {0};
+		char buffer[200] = {0};
 
 		for (int i = 0; i < a; i++) {
-			snprintf(buffer_, 200, "%d|", approved[i]);
-			strcat(buffer, buffer_);
+			snprintf(buffer, 200, "%d|", approved[i]);
+			strcat(approvedBuffer, buffer);
 		}
 
-		write(c_write, buffer, 100);
+		memset(buffer, 0, 200);
+		
+		for (int i = 0; i < r; i++) {
+			snprintf(buffer, 200, "%d|", rejected[i]);
+			strcat(rejectedBuffer, buffer);
+		}
+
+		write(c_write, approvedBuffer, 100);
+		read(c_read, buffer, 10);
+		write(c_write, rejectedBuffer, 100);
 
 		exit(0);
 	}
 
 	close(c_write);
+	close(c_read);
 
-	char buffer[200] = {0};
-	read(p_read, buffer, 200);
+	char approvedBuffer[200] = {0};
+	char rejectedBuffer[200] = {0};
+	read(p_read, approvedBuffer, 200);
+
+	char msg[] = "rejected";
+
+	write(p_write, msg, 10);
+	read(p_read, rejectedBuffer, 200);
 
 	waitpid(pid, NULL, 0);
 
 	char algo[] = "Priority";
-	outputModule(buffer, algo);
+	outputModule(approvedBuffer, rejectedBuffer, algo);
 }
 
 bool validTeam(char *team) {
