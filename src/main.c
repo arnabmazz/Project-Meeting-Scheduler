@@ -137,7 +137,7 @@ bool checkOverlapMeetings(int m, int n) {
 	return checkTimeOverlap(m, n);
 }
 
-void outputModule(char *approved, char *algo) {
+void outputModule(char *approvedM, char *algo) {
 	int fd_1[2];
 	int fd_2[2];
 
@@ -159,12 +159,13 @@ void outputModule(char *approved, char *algo) {
 		read(c_read, buffer, 200);
 
 
-		char filename[] = "Schedule_FCFS.txt";
+		char filename[30];
+		snprintf(filename, 30, "Schedule_%s.txt", algo);
 
 		FILE *file = fopen(filename, "w");
 
 		fprintf(file, "*** Project Meeting ***");
-		fprintf(file, "\n\nAlgorithm used: FCFS");
+		fprintf(file, "\n\nAlgorithm used: %s", algo);
 		fprintf(file, "\nPeriod: %d-%d-%d to %d-%d-%d", range.s_year, range.s_month, range.s_day, range.e_year, range.e_month, range.e_day);
 		fprintf(file, "\n\nDate\t\t\t\tStart\t\tEnd\t\t\tTeam\t\t\t\tProject");
 		fprintf(file, "\n=============================================================");
@@ -237,7 +238,7 @@ void outputModule(char *approved, char *algo) {
 	close(c_read);
 	close(c_write);
 
-	write(p_write, approved, 200);
+	write(p_write, approvedM, 200);
 
 	char buffer[100] = {0};
 	read(p_read, buffer, 100);
@@ -317,6 +318,85 @@ void scheduleFCFS() {
 	waitpid(pid, NULL, 0);
 
 	char algo[] = "FCFS";
+	outputModule(buffer, algo);
+}
+
+bool getPriority(int i, int j) {
+	struct Meeting meeting_A = Meetings[i];
+	struct Meeting meeting_B = Meetings[j];
+	struct Team team_A = Teams[getTeamIndex(meeting_A.team_name)];
+	struct Team team_B = Teams[getTeamIndex(meeting_B.team_name)];
+
+	return team_A.manager[0] < team_B.manager[0];
+}
+
+void schedulePriority() {
+	if(!getRange()) return;
+
+	int fd_c2p[2];
+
+	pipe(fd_c2p);
+
+	int c_write = fd_c2p[1];
+	int p_read = fd_c2p[0];
+
+	int pid = fork();
+
+	if(pid == 0) {
+		close(p_read);
+
+		int approved[50];	// storing approved meeting indexes in here
+		int rejected[50];	// storing approved meeting indexes in here
+		int a = 0;	// approved last index
+		int r = 0;	// approved last index
+
+		for (int i = 0; i < nMeetings; i++) {
+			if(!checkMeetingRange(i)) continue;	// skip out of range meetings
+
+			bool overlap = false;
+			int j;
+			for (j = 0; j < a; j++)
+			{
+				overlap = checkOverlapMeetings(i, approved[j]);
+				if(overlap) break;
+			}
+
+			if(overlap) {
+				if(getPriority(i, approved[j])) {
+					int reject = approved[j];
+					approved[j] = i;
+					rejected[r++] = reject;
+				}
+				else {
+					rejected[r++] = i;
+				}
+			}
+
+			else
+				approved[a++] = i;
+		}
+
+		char buffer[100] = {0};
+		char buffer_[200] = {0};
+
+		for (int i = 0; i < a; i++) {
+			snprintf(buffer_, 200, "%d|", approved[i]);
+			strcat(buffer, buffer_);
+		}
+
+		write(c_write, buffer, 100);
+
+		exit(0);
+	}
+
+	close(c_write);
+
+	char buffer[200] = {0};
+	read(p_read, buffer, 200);
+
+	waitpid(pid, NULL, 0);
+
+	char algo[] = "Priority";
 	outputModule(buffer, algo);
 }
 
@@ -666,7 +746,7 @@ void printMeetingSchedule() {
 			break;
 
 		case 2:
-			//
+			schedulePriority();
 			break;
 
 		case 3:
