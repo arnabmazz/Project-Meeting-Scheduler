@@ -244,7 +244,6 @@ void outputModule(char *approved, char *algo) {
 	waitpid(pid, NULL, 0);
 	printf("\n%s\n", buffer);
 
-	flush();
 	Pause();
 }
 
@@ -402,6 +401,54 @@ void parseMeetingRequest(char *buffer) {
 	nMeetings++;
 }
 
+void parseTeam(char *str) {
+	char delim[] = " ";
+	
+	// clear the current struct just in case
+	bzero(&Teams[nTeams], sizeof(Teams[nTeams]));
+
+	// add team name
+	char *ptr = strtok(str, delim);
+	strcpy(Teams[nTeams].team_name, ptr);
+	if(!validTeam(ptr)) {
+		printf("\n%s already exists!\n", ptr);
+		Pause();
+		return;
+	}
+
+	// add project name
+	ptr = strtok(NULL, delim);
+	strcpy(Teams[nTeams].project_name, ptr);
+	if(!validProject(ptr)) {
+		printf("\n%s already exists!\n", ptr);
+		Pause();
+		return;
+	}
+
+	// add manager
+	ptr = strtok(NULL, delim);
+	strcpy(Teams[nTeams].manager, ptr);
+
+	if(!validManager(ptr)) {
+		printf("\n%s is already manager of some project!\n", ptr);
+		Pause();
+		return;
+	}
+
+	// add members
+	for (size_t i = 0; i < 3; i++) {
+		ptr = strtok(NULL, delim);
+		strcpy(Teams[nTeams].members[i], ptr);
+		if(!validMember(ptr)) {
+			printf("\n%s is already in 3 projects!\n", ptr);
+			Pause();
+			return;
+		}
+	}
+
+	nTeams++;
+}
+
 void batchMeetingRequest() {
 	printf("Enter file name | ");
 
@@ -467,12 +514,54 @@ void inputMeetingRequest() {
 	// Team_A 2022-04-24 09:40 2
 }
 
+void batchProjectTeam() {
+	printf("Enter file name | ");
+
+	char filename[20];
+
+	flush();
+	fgets(filename, 20, stdin);
+
+	if(filename[0] == '0') {
+		cls();
+		return;
+	}
+
+	// remove trailing newline char (replace it with null terminator)
+	filename[strcspn(filename, "\n")] = 0;
+
+	// return if file doesnt exist
+	if(access(filename, F_OK) != 0) {
+		printf("\nCannot find file, make sure its in current dir.");
+		Pause();
+		return;
+	}
+
+	FILE *file;
+	int bufferLen = 255;
+	char buffer[bufferLen];
+
+	file = fopen(filename, "r");
+
+	int i = 0;
+
+	while(fgets(buffer, bufferLen, file)) {
+		buffer[strcspn(buffer, "\n")] = 0;
+		parseTeam(buffer);
+		i++;
+	}
+
+	fclose(file);
+
+	printf("\n%d Teams created.\n", i);
+	Pause();
+}
+
 void createProjectTeam() {
 	printf("Team_Name Project_Name Manager Member_1 Member_2 Member_3");
 	printf("\n\nEnter data in above format | ");
 
 	char str[255];
-	char delim[] = " ";
 
 	flush();
 	fgets(str, 255, stdin);
@@ -482,55 +571,36 @@ void createProjectTeam() {
 		return;
 	}
 
-	// clear the current struct just in case
-	bzero(&Teams[nTeams], sizeof(Teams[nTeams]));
+	parseTeam(str);
 
-	// add team name
-	char *ptr = strtok(str, delim);
-	strcpy(Teams[nTeams].team_name, ptr);
-	if(!validTeam(ptr)) {
-		printf("\n%s already exists!\n", ptr);
-		Pause();
-		return;
-	}
-
-	// add project name
-	ptr = strtok(NULL, delim);
-	strcpy(Teams[nTeams].project_name, ptr);
-	if(!validProject(ptr)) {
-		printf("\n%s already exists!\n", ptr);
-		Pause();
-		return;
-	}
-
-	// add manager
-	ptr = strtok(NULL, delim);
-	strcpy(Teams[nTeams].manager, ptr);
-
-	if(!validManager(ptr)) {
-		printf("\n%s is already manager of some project!\n", ptr);
-		Pause();
-		return;
-	}
-
-	// add members
-	for (size_t i = 0; i < 3; i++) {
-		ptr = strtok(NULL, delim);
-		strcpy(Teams[nTeams].members[i], ptr);
-		if(!validMember(ptr)) {
-			printf("\n%s is already in 3 projects!\n", ptr);
-			Pause();
-			return;
-		}
-	}
-
-	printf("\n%s %s is created.\n", Teams[nTeams].team_name, Teams[nTeams].project_name);
-	nTeams++;
+	printf("\n%s %s is created.\n", Teams[nTeams-1].team_name, Teams[nTeams-1].project_name);
 
 	Pause();
-	// Team_A Project_A Alan Cathy Fanny Helen
-	// Team_B Project_B Cathy Allan Fanny Helen
 	// 2022-04-20 2022-04-30
+}
+
+void projectTeamMenu() {
+	printf("1. Single input");
+	printf("\n2. Batch input");
+
+	int choice;
+
+	do {
+		printf("\n\nEnter an option | ");
+		scanf("%d", &choice);
+	} while (choice < 0 || choice > 3);
+
+	cls();
+
+	switch (choice) {
+		case 1:
+			createProjectTeam();
+			break;
+
+		case 2:
+			batchProjectTeam();
+			break;
+	}
 }
 
 void meetingRequestMenu() {
@@ -608,7 +678,7 @@ void mainMenu() {
 
 	switch (choice) {
 		case 1:
-			createProjectTeam();
+			projectTeamMenu();
 			break;
 
 		case 2:
