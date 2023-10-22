@@ -117,7 +117,8 @@ bool getRange() {
 }
 
 int getTeamIndex(char *name) {
-	for (size_t i = 0; i < nTeams; i++)
+    size_t i;
+	for (i = 0; i < nTeams; i++)
 		if(strcasecmp(name, Teams[i].team_name) == 0)
 			return i;
 	return -1;
@@ -144,8 +145,10 @@ bool checkOverlapMeetings(int m, int n) {
 
 	bool commonMembers = false;
 
-	for (size_t i = 0; i < 3; i++)
-		for (size_t j = 0; j < 3; j++)
+	size_t i, j;
+
+	for (i = 0; i < 3; i++)
+		for (j = 0; j < 3; j++)
 			if(strcasecmp(A.members[i], B.members[j]) == 0)
 				commonMembers = true;
 
@@ -187,11 +190,11 @@ void outputModule(char *approvedM, char *rejectedM, char *algo) {
 		fprintf(file, "\nPeriod: %d-%02d-%02d to %d-%02d-%02d", range.s_year, range.s_month, range.s_day, range.e_year, range.e_month, range.e_day);
 		fprintf(file, "\n\nDate\t\t\t\tStart\t\tEnd\t\t\tTeam\t\t\t\tProject");
 		fprintf(file, "\n=============================================================");
-		
+
 		char members[50][20];
 		int nMembers = 0;
-		int approved[50];
-		int rejected[50];
+		int approved[250];
+		int rejected[250];
 		int nApproved = 0;
 		int nRejected = 0;
 		char delims[] = "|";
@@ -206,11 +209,13 @@ void outputModule(char *approvedM, char *rejectedM, char *algo) {
 			snprintf(end_time, 6, "%02d:%02d", meeting.hours + meeting.dur_hours, meeting.minutes);
 			fprintf(file, "\n%s\t%s\t\t%s\t\t%s\t\t\t%s", meeting.date, meeting.time, end_time, team.team_name, team.project_name);
 
+			int i, j;
+
 			// add each member to members array if not already there
-			for (int i = 0; i < 3; i++)
+			for (i = 0; i < 3; i++)
 			{
 				bool included = false;
-				for (int j = 0; j < nMembers; j++)
+				for (j = 0; j < nMembers; j++)
 					if(strcasecmp(team.members[i], members[j]) == 0) {
 						included = true;
 						break;
@@ -223,18 +228,20 @@ void outputModule(char *approvedM, char *rejectedM, char *algo) {
 
 		fprintf(file, "\n=============================================================");
 
-		for (int i = 0; i < nMembers; i++)
+        int i, j, k;
+
+		for (i = 0; i < nMembers; i++)
 		{
 			fprintf(file, "\nStaff: %s", members[i]);
 			fprintf(file, "\n\nDate\t\t\t\tStart\t\tEnd\t\t\tTeam\t\t\t\tProject");
 			fprintf(file, "\n=============================================================");
 
-			for (int j = 0; j < nApproved; j++)
+			for (j = 0; j < nApproved; j++)
 			{
 				struct Meeting meeting = Meetings[approved[j]];
 				struct Team team = Teams[getTeamIndex(meeting.team_name)];
 
-				for (int k = 0; k < 3; k++)
+				for (k = 0; k < 3; k++)
 					if(strcasecmp(team.members[k], members[i]) == 0) {
 						char end_time[6];
 						snprintf(end_time, 6, "%02d:%02d", meeting.hours + meeting.dur_hours, meeting.minutes);
@@ -262,7 +269,7 @@ void outputModule(char *approvedM, char *rejectedM, char *algo) {
 			struct Meeting meeting = Meetings[atoi(ptr)];
 			fprintf(file, "\n%02d.\t%s\t%s\t%s\t%d", countR, meeting.team_name, meeting.date, meeting.time, meeting.dur_hours);
 		} while (ptr = strtok(NULL, delims));
-		
+
 		fprintf(file, "\n=============================================================");
 		fprintf(file, "\n\n\t\t\t\t\t\t\t\t\t\t- End -");
 		fclose(file);
@@ -322,19 +329,20 @@ void scheduleFCFS() {
 	int pid = fork();
 
 	if(pid == 0) {
+        int i,j;
 		close(p_read);
 		close(p_write);
 
-		int approved[50];	// storing approved meeting indexes in here
-		int rejected[50];	// storing approved meeting indexes in here
+		int approved[250];	// storing approved meeting indexes in here
+		int rejected[250];	// storing approved meeting indexes in here
 		int a = 0;	// approved last index
 		int r = 0;	// approved last index
 
-		for (int i = 0; i < nMeetings; i++) {
+		for (i = 0; i < nMeetings; i++) {
 			if(!checkMeetingRange(i)) continue;	// skip out of range meetings
 
 			bool overlap = false;
-			for (int j = 0; j < a; j++)
+			for (j = 0; j < a; j++)
 			{
 				overlap = checkOverlapMeetings(i, approved[j]);
 				if(overlap) break;
@@ -350,15 +358,17 @@ void scheduleFCFS() {
 		char rejectedBuffer[100] = {0};
 		char buffer[200] = {0};
 
-		for (int i = 0; i < a; i++) {
-			snprintf(buffer, 200, "%d|", approved[i]);
+		int k, l;
+
+		for (k = 0; k < a; k++) {
+			snprintf(buffer, 200, "%d|", approved[k]);
 			strcat(approvedBuffer, buffer);
 		}
 
 		memset(buffer, 0, 200);
-		
-		for (int i = 0; i < r; i++) {
-			snprintf(buffer, 200, "%d|", rejected[i]);
+
+		for (l = 0; l< r; l++) {
+			snprintf(buffer, 200, "%d|", rejected[l]);
 			strcat(rejectedBuffer, buffer);
 		}
 
@@ -403,7 +413,7 @@ void scheduleFCFS() {
 		rejectTotal++;
 		Teams[getTeamIndex(Meetings[atoi(ptr)].team_name)].rejected++;
 	} while (ptr = strtok(NULL, delims));
-	
+
 
 	char algo[] = "FCFS";
 	outputModule(approvedBuffer, rejectedBuffer, algo);
@@ -435,15 +445,16 @@ void schedulePriority() {
 	int pid = fork();
 
 	if(pid == 0) {
+        int i;
 		close(p_read);
 		close(p_write);
 
-		int approved[50];	// storing approved meeting indexes in here
-		int rejected[50];	// storing approved meeting indexes in here
+		int approved[250];	// storing approved meeting indexes in here
+		int rejected[250];	// storing approved meeting indexes in here
 		int a = 0;	// approved last index
 		int r = 0;	// approved last index
 
-		for (int i = 0; i < nMeetings; i++) {
+		for (i = 0; i < nMeetings; i++) {
 			if(!checkMeetingRange(i)) continue;	// skip out of range meetings
 
 			bool overlap = false;
@@ -474,15 +485,17 @@ void schedulePriority() {
 		char rejectedBuffer[100] = {0};
 		char buffer[200] = {0};
 
-		for (int i = 0; i < a; i++) {
-			snprintf(buffer, 200, "%d|", approved[i]);
+		int k, l;
+
+		for (k = 0; k < a; k++) {
+			snprintf(buffer, 200, "%d|", approved[k]);
 			strcat(approvedBuffer, buffer);
 		}
 
 		memset(buffer, 0, 200);
-		
-		for (int i = 0; i < r; i++) {
-			snprintf(buffer, 200, "%d|", rejected[i]);
+
+		for (l= 0; l < r; l++) {
+			snprintf(buffer, 200, "%d|", rejected[l]);
 			strcat(rejectedBuffer, buffer);
 		}
 
@@ -535,7 +548,8 @@ void schedulePriority() {
 bool validTeam(char *team) {
 	// checks if given person is already managing a team or not
 	int matches = 0;
-	for (size_t i = 0; i <= nTeams; i++)
+	size_t i;
+	for (i = 0; i <= nTeams; i++)
 		if(strcasecmp(team, Teams[i].team_name) == 0) matches++;
 	return matches <= 1;
 }
@@ -543,7 +557,8 @@ bool validTeam(char *team) {
 bool validProject(char *project) {
 	// checks if given person is already managing a team or not
 	int matches = 0;
-	for (size_t i = 0; i <= nTeams; i++)
+	size_t i;
+	for (i = 0; i <= nTeams; i++)
 		if(strcasecmp(project, Teams[i].project_name) == 0) matches++;
 	return matches <= 1;
 }
@@ -551,7 +566,8 @@ bool validProject(char *project) {
 bool validManager(char *manager) {
 	// checks if given person is already managing a team or not
 	int matches = 0;
-	for (size_t i = 0; i <= nTeams; i++)
+	size_t i;
+	for (i = 0; i <= nTeams; i++)
 		if(strcasecmp(manager, Teams[i].manager) == 0) matches++;
 	return matches <= 1;
 }
@@ -559,8 +575,9 @@ bool validManager(char *manager) {
 bool validMember(char *member) {
 	// checks if given person is in less 3 teams or not
 	int matches = 0;
-	for (size_t i = 0; i <= nTeams; i++)
-		for (size_t j = 0; j < 3; j++)		
+	size_t i,j;
+	for (i = 0; i <= nTeams; i++)
+		for (j = 0; j < 3; j++)
 			if(strcasecmp(member, Teams[i].members[j]) == 0) matches++;
 	return matches <= 3;
 }
@@ -638,9 +655,9 @@ void parseTeam(char *str) {
 	FILE *file = fopen(auditFN, "a");
 	fprintf(file, "Team Created | %s\n", str);
 	fclose(file);
-	
+
 	char delim[] = " ";
-	
+
 	// clear the current struct just in case
 	bzero(&Teams[nTeams], sizeof(Teams[nTeams]));
 
@@ -672,8 +689,10 @@ void parseTeam(char *str) {
 		return;
 	}
 
+	size_t i;
+
 	// add members
-	for (size_t i = 0; i < 3; i++) {
+	for (i = 0; i < 3; i++) {
 		ptr = strtok(NULL, delim);
 		strcpy(Teams[nTeams].members[i], ptr);
 		if(!validMember(ptr)) {
@@ -843,7 +862,9 @@ void meetingAttendance() {
 
 	struct Team team = Teams[index];
 
-	for (int i = 0; i < 3; i++)
+	int i;
+
+	for (i = 0; i < 3; i++)
 	{
 		bool found = false;
 		int j;
@@ -877,7 +898,7 @@ void meetingAttendance() {
 
 	printf("\n\nDone!\n");
 	flush();
-	Pause();	
+	Pause();
 }
 
 void attendanceReport() {
@@ -887,7 +908,9 @@ void attendanceReport() {
 	fprintf(file, "*** Attendace Report ***");
 	fprintf(file, "\n\n=============================");
 
-	for (int i = 0; i < nAttendance; i++)
+	int i;
+
+	for (i = 0; i < nAttendance; i++)
 	{
 		struct Attendance att = attendace[i];
 		fprintf(file, "\n%s\t\t\t\t\t%.2f%%", att.person, (att.presents/att.times_taken)*(float)100);
@@ -899,7 +922,7 @@ void attendanceReport() {
 
 	printf("\n\nAttendance Report saved to %s\n", filename);
 	flush();
-	Pause();	
+	Pause();
 }
 
 void printSummary() {
@@ -914,7 +937,9 @@ void printSummary() {
 
 	fprintf(file, "\n\nUtilization of Time Slot:\n");
 
-	for (int i = 0; i < nTeams; i++)
+	int i;
+
+	for (i = 0; i < nTeams; i++)
 	{
 		struct Team team = Teams[i];
 		fprintf(file, "\n%s\t\t\t\t\t%.2f%%", team.team_name, ((float)team.accepted * 100)/(team.accepted+team.rejected));
@@ -922,9 +947,11 @@ void printSummary() {
 
 	fprintf(file, "\n\nAttendace:\n");
 
-	for (int i = 0; i < nAttendance; i++)
+	int j;
+
+	for (j = 0; j < nAttendance; j++)
 	{
-		struct Attendance att = attendace[i];
+		struct Attendance att = attendace[j];
 		fprintf(file, "\n%s\t\t\t\t\t%.2f%%", att.person, (att.presents/att.times_taken)*(float)100);
 	}
 
